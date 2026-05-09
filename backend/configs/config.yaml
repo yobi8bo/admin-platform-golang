@@ -1,0 +1,28 @@
+server:
+  env: dev
+  addr: ":8085"
+  allowedOrigins:
+    - "http://localhost:5173"
+
+database:
+  dsn: "host=localhost user=admin_platform password=admin_platform dbname=admin_platform port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+
+redis:
+  addr: "localhost:8379"
+  password: ""
+  db: 0
+
+rustfs:
+  endpoint: "localhost:9000"
+  accessKey: "rustfsadmin"
+  secretKey: "rustfsadmin"
+  bucket: "admin-platform"
+  useSSL: false
+
+jwt:
+  secret: "change-me-in-production"
+  accessTTLMinutes: 120
+  refreshTTLDays: 7
+
+log:
+  level: "debug"

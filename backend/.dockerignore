@@ -1,0 +1,9 @@
+.git
+.gitignore
+Dockerfile
+*.log
+tmp/
+dist/
+bin/
+coverage.out
+.DS_Store

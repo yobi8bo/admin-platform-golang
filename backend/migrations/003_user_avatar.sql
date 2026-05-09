@@ -1,0 +1,2 @@
+ALTER TABLE sys_users
+ADD COLUMN IF NOT EXISTS avatar_id BIGINT;

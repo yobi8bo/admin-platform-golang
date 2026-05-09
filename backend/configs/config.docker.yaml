@@ -1,0 +1,33 @@
+server:
+  env: production
+  addr: ":8085"
+  # Docker Compose 内所有请求都经 nginx 反代，同源访问无需 CORS 限制
+  allowedOrigins:
+    - "*"
+
+database:
+  # 使用 Docker Compose 服务名 postgres 作为主机名
+  dsn: "host=postgres user=admin_platform password=admin_platform dbname=admin_platform port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+
+redis:
+  # 使用 Docker Compose 服务名 redis，内部端口为 6379
+  addr: "redis:6379"
+  password: ""
+  db: 0
+
+rustfs:
+  # 使用 Docker Compose 服务名 rustfs
+  endpoint: "rustfs:9000"
+  accessKey: "rustfsadmin"
+  secretKey: "rustfsadmin"
+  bucket: "admin-platform"
+  useSSL: false
+
+jwt:
+  # 生产环境请通过环境变量 ADMIN_PLATFORM_JWT_SECRET 覆盖此值
+  secret: "change-me-in-production"
+  accessTTLMinutes: 120
+  refreshTTLDays: 7
+
+log:
+  level: "info"
