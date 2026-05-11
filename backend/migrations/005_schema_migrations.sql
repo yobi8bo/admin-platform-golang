@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version VARCHAR(255) PRIMARY KEY,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO schema_migrations(version)
+VALUES
+  ('001_init'),
+  ('002_datetime_columns'),
+  ('003_user_avatar'),
+  ('004_file_delete_permission'),
+  ('005_schema_migrations')
+ON CONFLICT (version) DO NOTHING;
