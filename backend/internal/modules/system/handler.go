@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -92,8 +93,8 @@ func (h *Handler) CreateUser(c *gin.Context) {
 			return err
 		}
 		if len(req.RoleIDs) > 0 {
-			var roles []Role
-			if err := tx.Find(&roles, req.RoleIDs).Error; err != nil {
+			roles, err := loadAssignableRoles(tx, req.RoleIDs)
+			if err != nil {
 				return err
 			}
 			return tx.Model(&user).Association("Roles").Replace(roles)
@@ -131,15 +132,22 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 	updates := map[string]any{"nickname": req.Nickname, "email": req.Email, "mobile": req.Mobile, "status": req.Status, "updated_by": contextx.UserID(c)}
-	if err := h.db.Model(&user).Updates(updates).Error; err != nil {
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&user).Updates(updates).Error; err != nil {
+			return err
+		}
+		if req.RoleIDs == nil {
+			return nil
+		}
+		roles, err := loadAssignableRoles(tx, req.RoleIDs)
+		if err != nil {
+			return err
+		}
+		return tx.Model(&user).Association("Roles").Replace(roles)
+	})
+	if err != nil {
 		response.Fail(c, http.StatusBadRequest, errs.CodeBadRequest, err.Error())
 		return
-	}
-	if req.RoleIDs != nil {
-		var roles []Role
-		if err := h.db.Find(&roles, req.RoleIDs).Error; err == nil {
-			_ = h.db.Model(&user).Association("Roles").Replace(roles)
-		}
 	}
 	response.OK(c, user)
 }
@@ -483,4 +491,33 @@ func valueOr(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func loadAssignableRoles(db *gorm.DB, roleIDs []uint) ([]Role, error) {
+	ids := uniqueUintIDs(roleIDs)
+	if len(ids) == 0 {
+		return []Role{}, nil
+	}
+
+	var roles []Role
+	if err := db.Where("id IN ? AND status = ?", ids, "enabled").Find(&roles).Error; err != nil {
+		return nil, err
+	}
+	if len(roles) != len(ids) {
+		return nil, fmt.Errorf("角色不存在或已禁用")
+	}
+	return roles, nil
+}
+
+func uniqueUintIDs(ids []uint) []uint {
+	out := make([]uint, 0, len(ids))
+	seen := make(map[uint]struct{}, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
 }
