@@ -13,20 +13,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// Handler 承载审计日志查询接口，日志写入由认证和中间件模块完成。
 type Handler struct {
 	db *gorm.DB
 }
 
+// NewHandler 创建审计 handler。
 func NewHandler(db *gorm.DB) *Handler {
 	return &Handler{db: db}
 }
 
+// Register 注册审计查询接口，所有接口都需要对应审计查看权限。
 func (h *Handler) Register(rg *gin.RouterGroup, require func(string) gin.HandlerFunc) {
 	audit := rg.Group("/audit")
 	audit.GET("/login-logs", require("audit:login-log:list"), h.LoginLogs)
 	audit.GET("/operation-logs", require("audit:operation-log:list"), h.OperationLogs)
 }
 
+// LoginLogs 分页返回登录审计日志。
 func (h *Handler) LoginLogs(c *gin.Context) {
 	page, pageSize := pageParams(c)
 	var total int64
@@ -38,6 +42,7 @@ func (h *Handler) LoginLogs(c *gin.Context) {
 	response.OK(c, response.Page[LoginLog]{List: list, Total: total, Page: page, PageSize: pageSize})
 }
 
+// OperationLogs 分页返回操作审计日志，并补充面向前端展示的中文操作描述。
 func (h *Handler) OperationLogs(c *gin.Context) {
 	page, pageSize := pageParams(c)
 	var total int64
@@ -46,6 +51,7 @@ func (h *Handler) OperationLogs(c *gin.Context) {
 		response.Fail(c, http.StatusInternalServerError, errs.CodeInternal, err.Error())
 		return
 	}
+	// 左连接用户表用于展示操作者名称；用户被删除时仍保留原始 user_id 和日志记录。
 	query := h.db.Table("sys_operation_logs AS logs").
 		Select("logs.id, logs.created_at, logs.user_id, COALESCE(users.nickname, users.username, '') AS username, logs.method, logs.path, logs.status").
 		Joins("LEFT JOIN sys_users AS users ON users.id = logs.user_id")
@@ -71,6 +77,7 @@ type operationLogItem struct {
 }
 
 func describeOperation(method, path string) string {
+	// 优先使用精确路径标签，无法识别时再按 HTTP 方法和模块推导通用描述。
 	if label := operationLabel(method, path); label != "" {
 		return label
 	}

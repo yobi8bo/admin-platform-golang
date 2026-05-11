@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// New 根据配置创建 zap logger，debug 级别使用开发格式便于本地排查。
 func New(cfg config.LogConfig) (*zap.Logger, error) {
 	level := zapcore.InfoLevel
 	if err := level.UnmarshalText([]byte(cfg.Level)); err != nil {

@@ -18,6 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Trace 为每个请求写入 traceId，响应和日志依赖该值串联一次请求链路。
 func Trace() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("traceId", time.Now().Format("20060102150405.000000000"))
@@ -25,6 +26,7 @@ func Trace() gin.HandlerFunc {
 	}
 }
 
+// RequestLogger 记录 HTTP 请求摘要，避免在业务 handler 中重复打访问日志。
 func RequestLogger(log *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -40,6 +42,7 @@ func RequestLogger(log *zap.Logger) gin.HandlerFunc {
 	}
 }
 
+// Recovery 统一兜底 panic，防止内部异常直接暴露给前端。
 func Recovery(log *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -53,6 +56,7 @@ func Recovery(log *zap.Logger) gin.HandlerFunc {
 	}
 }
 
+// Auth 校验 Bearer access token，并把用户 ID 和角色 ID 写入 Gin 上下文供后续权限判断使用。
 func Auth(cfg config.JWTConfig, db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
@@ -67,6 +71,7 @@ func Auth(cfg config.JWTConfig, db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		// 角色关系每次请求从数据库读取，确保角色调整后权限能立即生效。
 		var roleIDs []uint
 		if err := db.Model(&system.UserRole{}).Where("user_id = ?", claims.UserID).Pluck("role_id", &roleIDs).Error; err != nil {
 			response.Fail(c, http.StatusUnauthorized, errs.CodeUnauthorized, "invalid user")
@@ -79,6 +84,7 @@ func Auth(cfg config.JWTConfig, db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// RequirePermission 校验当前用户角色是否拥有指定权限字符串，权限数据来自菜单表。
 func RequirePermission(db *gorm.DB, permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleIDs := contextx.RoleIDs(c)
@@ -102,6 +108,7 @@ func RequirePermission(db *gorm.DB, permission string) gin.HandlerFunc {
 	}
 }
 
+// OperationAudit 记录会改变系统状态的私有接口调用，审计失败不阻断主业务响应。
 func OperationAudit(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -111,6 +118,7 @@ func OperationAudit(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// 审计日志是旁路记录，写入失败不能影响用户操作结果。
 		_ = db.Create(&audit.OperationLog{
 			UserID: contextx.UserID(c),
 			Module: moduleName(path),

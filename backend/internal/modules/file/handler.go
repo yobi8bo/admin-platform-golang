@@ -19,16 +19,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// Handler 承载文件元数据查询、上传、预签名 URL 和删除接口。
 type Handler struct {
 	db     *gorm.DB
 	client *minio.Client
 	cfg    config.RustFSConfig
 }
 
+// NewHandler 创建文件 handler，对象存储客户端由 bootstrap 统一初始化。
 func NewHandler(db *gorm.DB, client *minio.Client, cfg config.RustFSConfig) *Handler {
 	return &Handler{db: db, client: client, cfg: cfg}
 }
 
+// Register 注册文件私有接口；头像相关接口依赖登录态但不额外要求文件管理权限。
 func (h *Handler) Register(rg *gin.RouterGroup, require func(string) gin.HandlerFunc) {
 	files := rg.Group("/files")
 	files.GET("", require("file:read"), h.List)
@@ -40,6 +43,7 @@ func (h *Handler) Register(rg *gin.RouterGroup, require func(string) gin.Handler
 	files.DELETE("/:id", require("file:delete"), h.Delete)
 }
 
+// List 分页查询文件元数据，支持按原始文件名和 MIME 类型搜索。
 func (h *Handler) List(c *gin.Context) {
 	page, pageSize := pageParams(c)
 	var total int64
@@ -55,10 +59,12 @@ func (h *Handler) List(c *gin.Context) {
 	response.OK(c, response.Page[File]{List: list, Total: total, Page: page, PageSize: pageSize})
 }
 
+// Upload 上传普通文件，调用方需要具备 file:upload 权限。
 func (h *Handler) Upload(c *gin.Context) {
 	h.upload(c, false)
 }
 
+// UploadAvatar 上传头像文件，只允许 image/* 内容类型。
 func (h *Handler) UploadAvatar(c *gin.Context) {
 	h.upload(c, true)
 }
@@ -76,6 +82,7 @@ func (h *Handler) upload(c *gin.Context, imageOnly bool) {
 	}
 	defer src.Close()
 
+	// objectKey 使用日期前缀便于对象存储分目录管理，Base 防止客户端文件名携带路径穿越。
 	objectKey := time.Now().Format("2006/01/02/150405000") + "-" + filepath.Base(header.Filename)
 	contentType := header.Header.Get("Content-Type")
 	if imageOnly && !strings.HasPrefix(contentType, "image/") {
@@ -102,10 +109,12 @@ func (h *Handler) upload(c *gin.Context, imageOnly bool) {
 	response.Created(c, record)
 }
 
+// URL 生成内联访问的短期预签名 URL。
 func (h *Handler) URL(c *gin.Context) {
 	h.presignedURL(c, false)
 }
 
+// DownloadURL 生成下载用途的短期预签名 URL，并设置下载文件名。
 func (h *Handler) DownloadURL(c *gin.Context) {
 	h.presignedURL(c, true)
 }
@@ -123,8 +132,10 @@ func (h *Handler) presignedURL(c *gin.Context, attachment bool) {
 	}
 	reqParams := url.Values{}
 	if attachment {
+		// 下载文件名只使用安全的 basename，避免响应头注入或路径信息泄露。
 		reqParams.Set("response-content-disposition", `attachment; filename="`+escapeFilename(record.OriginalName)+`"`)
 	}
+	// 预签名 URL 只开放 15 分钟，避免数据库中的私有对象被长期公开访问。
 	url, err := h.client.PresignedGetObject(context.Background(), record.Bucket, record.ObjectKey, 15*time.Minute, reqParams)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, errs.CodeInternal, err.Error())
@@ -133,6 +144,7 @@ func (h *Handler) presignedURL(c *gin.Context, attachment bool) {
 	response.OK(c, gin.H{"url": url.String(), "expiresIn": 900})
 }
 
+// Delete 先删除对象存储中的文件，再软删除数据库元数据。
 func (h *Handler) Delete(c *gin.Context) {
 	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

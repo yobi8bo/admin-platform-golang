@@ -24,6 +24,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// App 持有后端运行期的共享依赖，路由、数据库、缓存和对象存储都从这里装配。
 type App struct {
 	Config *config.Config
 	Logger *zap.Logger
@@ -33,6 +34,7 @@ type App struct {
 	Router *gin.Engine
 }
 
+// New 根据配置路径初始化应用依赖，并完成私有路由、公共路由和对象存储桶准备。
 func New(configPath string) (*App, error) {
 	cfg, err := config.Load(configPath)
 	if err != nil {
@@ -66,6 +68,7 @@ func New(configPath string) (*App, error) {
 	return app, nil
 }
 
+// Run 启动 HTTP 服务，调用方负责处理 ListenAndServe 返回的错误。
 func (a *App) Run() error {
 	srv := &http.Server{
 		Addr:              a.Config.Server.Addr,
@@ -76,6 +79,7 @@ func (a *App) Run() error {
 	return srv.ListenAndServe()
 }
 
+// buildRouter 集中注册中间件和模块路由，私有接口统一挂载认证和操作审计。
 func (a *App) buildRouter() *gin.Engine {
 	if a.Config.Server.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -102,6 +106,7 @@ func (a *App) buildRouter() *gin.Engine {
 	require := func(permission string) gin.HandlerFunc {
 		return middleware.RequirePermission(a.DB, permission)
 	}
+	// 模块路由只接收私有路由组，避免业务模块绕过统一认证和审计边界。
 	authHandler.RegisterPrivate(private)
 	systemHandler.Register(private, require)
 	filemod.NewHandler(a.DB, a.Store, a.Config.RustFS).Register(private, require)
@@ -110,6 +115,7 @@ func (a *App) buildRouter() *gin.Engine {
 	return r
 }
 
+// ensureBucket 在启动阶段确保对象存储桶存在，避免首次上传时才暴露存储配置问题。
 func ensureBucket(ctx context.Context, client *minio.Client, bucket string) error {
 	exists, err := client.BucketExists(ctx, bucket)
 	if err != nil {
