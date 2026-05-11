@@ -2,8 +2,8 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">个人中心</h1>
-        <p class="page-subtitle">维护基础资料与登录密码</p>
+        <h1 class="page-title">{{ t('profile.title') }}</h1>
+        <p class="page-subtitle">{{ t('profile.desc') }}</p>
       </div>
     </div>
     <a-row :gutter="[16, 16]">
@@ -14,41 +14,41 @@
               {{ profileForm.nickname?.slice(0, 1) || auth.profile?.username?.slice(0, 1) || 'A' }}
             </a-avatar>
             <div class="avatar-actions">
-              <div class="avatar-title">头像</div>
-              <div class="muted">支持 JPG、PNG、WebP 等图片格式</div>
+              <div class="avatar-title">{{ t('profile.avatar') }}</div>
+              <div class="muted">{{ t('profile.avatarHelp') }}</div>
               <a-upload
                 accept="image/*"
                 :show-upload-list="false"
                 :custom-request="uploadProfileAvatar"
               >
-                <a-button :loading="uploadingAvatar">上传新头像</a-button>
+                <a-button :loading="uploadingAvatar">{{ t('profile.uploadAvatar') }}</a-button>
               </a-upload>
             </div>
           </div>
           <a-form layout="vertical" :model="profileForm" @finish="saveProfile">
-            <a-form-item label="昵称" name="nickname" :rules="[{ required: true, message: '请输入昵称' }]">
+            <a-form-item :label="t('profile.nickname')" name="nickname" :rules="[{ required: true, message: t('profile.nicknameRequired') }]">
               <a-input v-model:value="profileForm.nickname" />
             </a-form-item>
-            <a-form-item label="邮箱">
+            <a-form-item :label="t('profile.email')">
               <a-input v-model:value="profileForm.email" />
             </a-form-item>
-            <a-form-item label="手机号">
+            <a-form-item :label="t('profile.mobile')">
               <a-input v-model:value="profileForm.mobile" />
             </a-form-item>
-            <a-button type="primary" html-type="submit" :loading="savingProfile">保存资料</a-button>
+            <a-button type="primary" html-type="submit" :loading="savingProfile">{{ t('profile.saveProfile') }}</a-button>
           </a-form>
         </div>
       </a-col>
       <a-col :xs="24" :lg="10">
         <div class="panel">
           <a-form layout="vertical" :model="passwordForm" @finish="savePassword">
-            <a-form-item label="原密码" name="oldPassword" :rules="[{ required: true, message: '请输入原密码' }]">
+            <a-form-item :label="t('profile.oldPassword')" name="oldPassword" :rules="[{ required: true, message: t('profile.oldPasswordRequired') }]">
               <a-input-password v-model:value="passwordForm.oldPassword" />
             </a-form-item>
-            <a-form-item label="新密码" name="newPassword" :rules="[{ required: true, min: 6, message: '至少 6 位' }]">
+            <a-form-item :label="t('profile.newPassword')" name="newPassword" :rules="[{ required: true, min: 6, message: t('profile.passwordMin') }]">
               <a-input-password v-model:value="passwordForm.newPassword" />
             </a-form-item>
-            <a-button html-type="submit" :loading="savingPassword">修改密码</a-button>
+            <a-button html-type="submit" :loading="savingPassword">{{ t('profile.changePassword') }}</a-button>
           </a-form>
         </div>
       </a-col>
@@ -59,10 +59,12 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { updatePassword, updateProfile } from '../../api/auth'
 import { getAvatarUrl, uploadAvatar } from '../../api/file'
 import { useAuthStore } from '../../stores/auth'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const savingProfile = ref(false)
 const savingPassword = ref(false)
@@ -86,7 +88,7 @@ async function saveProfile() {
   try {
     await updateProfile(profileForm)
     await auth.bootstrap()
-    message.success('资料已更新')
+    message.success(t('profile.profileUpdated'))
   } finally {
     savingProfile.value = false
   }
@@ -98,7 +100,7 @@ async function savePassword() {
     await updatePassword(passwordForm)
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
-    message.success('密码已更新')
+    message.success(t('profile.passwordUpdated'))
   } finally {
     savingPassword.value = false
   }
@@ -114,7 +116,7 @@ async function uploadProfileAvatar({ file, onSuccess, onError }) {
     await updateProfile(profileForm)
     await auth.bootstrap()
     await loadAvatarUrl()
-    message.success('头像已更新')
+    message.success(t('profile.avatarUpdated'))
     onSuccess?.(avatar)
   } catch (error) {
     onError?.(error)

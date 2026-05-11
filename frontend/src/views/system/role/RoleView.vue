@@ -2,63 +2,68 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">角色管理</h1>
-        <p class="page-subtitle">配置角色、数据范围与菜单权限</p>
+        <h1 class="page-title">{{ t('system.role.title') }}</h1>
+        <p class="page-subtitle">{{ t('system.role.desc') }}</p>
       </div>
-      <a-button v-permission="'system:role:create'" type="primary" @click="openCreate">新增角色</a-button>
+      <a-button v-permission="'system:role:create'" type="primary" @click="openCreate">{{ t('system.role.create') }}</a-button>
     </div>
     <div class="panel">
       <a-table row-key="id" :columns="columns" :data-source="rows" :loading="loading" :pagination="false">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag :color="record.status === 'enabled' ? 'green' : 'red'">{{ record.status }}</a-tag>
+            <a-tag :color="record.status === 'enabled' ? 'green' : 'red'">{{ t(`common.${record.status}`) }}</a-tag>
+          </template>
+          <template v-if="column.key === 'dataScope'">
+            {{ t(`system.role.dataScopes.${record.dataScope}`) }}
           </template>
           <template v-if="column.key === 'actions'">
             <a-space>
-              <a v-permission="'system:role:update'" @click="openEdit(record)">编辑</a>
-              <a-popconfirm title="确认删除该角色？" @confirm="remove(record.id)">
-                <a v-permission="'system:role:delete'" class="danger">删除</a>
+              <a v-permission="'system:role:update'" @click="openEdit(record)">{{ t('common.edit') }}</a>
+              <a-popconfirm :title="t('system.role.deleteConfirm')" @confirm="remove(record.id)">
+                <a v-permission="'system:role:delete'" class="danger">{{ t('common.delete') }}</a>
               </a-popconfirm>
             </a-space>
           </template>
         </template>
       </a-table>
     </div>
-    <a-drawer v-model:open="drawerOpen" :title="editing?.id ? '编辑角色' : '新增角色'" width="520">
+    <a-drawer v-model:open="drawerOpen" :title="editing?.id ? t('system.role.editTitle') : t('system.role.createTitle')" width="520">
       <a-form layout="vertical" :model="form" @finish="submit">
-        <a-form-item label="角色编码" name="code" :rules="[{ required: true, message: '请输入角色编码' }]">
+        <a-form-item :label="t('system.role.roleCode')" name="code" :rules="[{ required: true, message: t('system.role.codeRequired') }]">
           <a-input v-model:value="form.code" />
         </a-form-item>
-        <a-form-item label="角色名称" name="name" :rules="[{ required: true, message: '请输入角色名称' }]">
+        <a-form-item :label="t('system.role.roleName')" name="name" :rules="[{ required: true, message: t('system.role.nameRequired') }]">
           <a-input v-model:value="form.name" />
         </a-form-item>
-        <a-form-item label="数据范围">
+        <a-form-item :label="t('system.role.dataScope')">
           <a-select v-model:value="form.dataScope">
-            <a-select-option value="all">全部数据</a-select-option>
-            <a-select-option value="dept">本部门</a-select-option>
-            <a-select-option value="self">本人数据</a-select-option>
+            <a-select-option value="all">{{ t('system.role.dataScopes.all') }}</a-select-option>
+            <a-select-option value="dept">{{ t('system.role.dataScopes.dept') }}</a-select-option>
+            <a-select-option value="self">{{ t('system.role.dataScopes.self') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.status')">
           <a-select v-model:value="form.status">
-            <a-select-option value="enabled">enabled</a-select-option>
-            <a-select-option value="disabled">disabled</a-select-option>
+            <a-select-option value="enabled">{{ t('common.enabled') }}</a-select-option>
+            <a-select-option value="disabled">{{ t('common.disabled') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="菜单权限">
+        <a-form-item :label="t('system.role.menuPermission')">
           <a-tree v-model:checkedKeys="form.menuIds" checkable :tree-data="menuTree" :field-names="{ title: 'title', key: 'id', children: 'children' }" />
         </a-form-item>
-        <a-button type="primary" html-type="submit" :loading="saving">保存</a-button>
+        <a-button type="primary" html-type="submit" :loading="saving">{{ t('common.save') }}</a-button>
       </a-form>
     </a-drawer>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { createRole, deleteRole, getMenuTree, getRoles, updateRole } from '../../../api/system'
 
+const { t } = useI18n()
 const loading = ref(false)
 const saving = ref(false)
 const drawerOpen = ref(false)
@@ -66,14 +71,14 @@ const editing = ref(null)
 const rows = ref([])
 const menuTree = ref([])
 const form = reactive({ code: '', name: '', sort: 0, status: 'enabled', dataScope: 'self', menuIds: [] })
-const columns = [
-  { title: 'ID', dataIndex: 'id', width: 72 },
-  { title: '编码', dataIndex: 'code' },
-  { title: '名称', dataIndex: 'name' },
-  { title: '数据范围', dataIndex: 'dataScope' },
-  { title: '状态', key: 'status', width: 100 },
-  { title: '操作', key: 'actions', width: 140 }
-]
+const columns = computed(() => [
+  { title: t('common.id'), dataIndex: 'id', width: 72 },
+  { title: t('system.role.code'), dataIndex: 'code' },
+  { title: t('system.role.name'), dataIndex: 'name' },
+  { title: t('system.role.dataScope'), key: 'dataScope' },
+  { title: t('common.status'), key: 'status', width: 100 },
+  { title: t('common.actions'), key: 'actions', width: 140 }
+])
 
 onMounted(async () => {
   menuTree.value = await getMenuTree()
@@ -115,7 +120,7 @@ async function submit() {
     if (editing.value?.id) await updateRole(editing.value.id, form)
     else await createRole(form)
     drawerOpen.value = false
-    message.success('已保存')
+    message.success(t('common.saved'))
     load()
   } finally {
     saving.value = false
@@ -124,7 +129,7 @@ async function submit() {
 
 async function remove(id) {
   await deleteRole(id)
-  message.success('已删除')
+  message.success(t('common.deleted'))
   load()
 }
 </script>

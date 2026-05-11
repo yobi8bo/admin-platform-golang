@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { message } from 'ant-design-vue'
 import router from '../router'
+import i18n from '../locales'
 import { useAuthStore } from '../stores/auth'
 
 const service = axios.create({
@@ -20,12 +21,12 @@ service.interceptors.response.use(
   (response) => {
     const body = response.data
     if (body?.code === 0) return body.data
-    message.error(body?.message || '请求失败')
+    message.error(body?.message || i18n.global.t('common.requestFailed'))
     return Promise.reject(body)
   },
   (error) => {
     const status = error.response?.status
-    const msg = error.response?.data?.message || error.message || '网络异常'
+    const msg = error.response?.data?.message || error.message || i18n.global.t('common.networkError')
     const isLoginRequest = error.config?.url === '/auth/login'
     if (status === 401 && !isLoginRequest) {
       const auth = useAuthStore()

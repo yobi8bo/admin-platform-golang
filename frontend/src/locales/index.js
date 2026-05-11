@@ -11,18 +11,25 @@ const messages = {
     },
     common: {
       actions: '操作',
+      cancel: '取消',
       createdAt: '时间',
       delete: '删除',
+      deleted: '已删除',
       download: '下载',
       edit: '编辑',
+      enabled: '启用',
+      disabled: '禁用',
       id: 'ID',
       message: '消息',
       reset: '重置',
       save: '保存',
+      saved: '已保存',
       search: '查询',
       status: '状态',
       success: '成功',
-      failed: '失败'
+      failed: '失败',
+      requestFailed: '请求失败',
+      networkError: '网络异常'
     },
     menu: {
       Dashboard: '仪表盘',
@@ -83,6 +90,107 @@ const messages = {
       uploadSuccess: '上传成功',
       deleteConfirm: '确认删除该文件？',
       deleted: '已删除'
+    },
+    profile: {
+      title: '个人中心',
+      desc: '维护基础资料与登录密码',
+      avatar: '头像',
+      avatarHelp: '支持 JPG、PNG、WebP 等图片格式',
+      uploadAvatar: '上传新头像',
+      nickname: '昵称',
+      email: '邮箱',
+      mobile: '手机号',
+      oldPassword: '原密码',
+      newPassword: '新密码',
+      saveProfile: '保存资料',
+      changePassword: '修改密码',
+      nicknameRequired: '请输入昵称',
+      oldPasswordRequired: '请输入原密码',
+      newPasswordRequired: '请输入新密码',
+      passwordMin: '至少 6 位',
+      profileUpdated: '资料已更新',
+      passwordUpdated: '密码已更新',
+      avatarUpdated: '头像已更新'
+    },
+    system: {
+      user: {
+        title: '用户管理',
+        desc: '维护登录账号、联系方式与角色授权',
+        create: '新增用户',
+        editTitle: '编辑用户',
+        createTitle: '新增用户',
+        deleteConfirm: '确认删除该用户？',
+        keyword: '用户名 / 昵称',
+        username: '用户名',
+        nickname: '昵称',
+        password: '初始密码',
+        email: '邮箱',
+        mobile: '手机号',
+        roles: '角色',
+        usernameRequired: '请输入用户名',
+        nicknameRequired: '请输入昵称',
+        passwordRequired: '请输入密码'
+      },
+      role: {
+        title: '角色管理',
+        desc: '配置角色、数据范围与菜单权限',
+        create: '新增角色',
+        editTitle: '编辑角色',
+        createTitle: '新增角色',
+        deleteConfirm: '确认删除该角色？',
+        code: '编码',
+        roleCode: '角色编码',
+        name: '名称',
+        roleName: '角色名称',
+        dataScope: '数据范围',
+        menuPermission: '菜单权限',
+        codeRequired: '请输入角色编码',
+        nameRequired: '请输入角色名称',
+        dataScopes: {
+          all: '全部数据',
+          dept: '本部门',
+          self: '本人数据'
+        }
+      },
+      menu: {
+        title: '菜单管理',
+        desc: '维护路由菜单、按钮权限与排序',
+        create: '新增菜单',
+        editTitle: '编辑菜单',
+        createTitle: '新增菜单',
+        deleteConfirm: '确认删除该菜单？',
+        parent: '上级菜单',
+        root: '根目录',
+        name: '名称',
+        displayTitle: '标题',
+        type: '类型',
+        path: '路径',
+        component: '组件',
+        icon: '图标',
+        permission: '权限标识',
+        sort: '排序',
+        hidden: '隐藏菜单',
+        nameRequired: '请输入名称',
+        titleRequired: '请输入标题',
+        types: {
+          catalog: '目录',
+          menu: '菜单',
+          button: '按钮'
+        }
+      },
+      dept: {
+        title: '部门管理',
+        desc: '维护组织层级与部门状态',
+        create: '新增部门',
+        editTitle: '编辑部门',
+        createTitle: '新增部门',
+        deleteConfirm: '确认删除该部门？',
+        parent: '上级部门',
+        root: '根部门',
+        name: '部门名称',
+        sort: '排序',
+        nameRequired: '请输入部门名称'
+      }
     }
   },
   'en-US': {
@@ -95,18 +203,25 @@ const messages = {
     },
     common: {
       actions: 'Actions',
+      cancel: 'Cancel',
       createdAt: 'Time',
       delete: 'Delete',
+      deleted: 'Deleted',
       download: 'Download',
       edit: 'Edit',
+      enabled: 'Enabled',
+      disabled: 'Disabled',
       id: 'ID',
       message: 'Message',
       reset: 'Reset',
       save: 'Save',
+      saved: 'Saved',
       search: 'Search',
       status: 'Status',
       success: 'Success',
-      failed: 'Failed'
+      failed: 'Failed',
+      requestFailed: 'Request failed',
+      networkError: 'Network error'
     },
     menu: {
       Dashboard: 'Dashboard',
@@ -167,13 +282,116 @@ const messages = {
       uploadSuccess: 'Uploaded',
       deleteConfirm: 'Delete this file?',
       deleted: 'Deleted'
+    },
+    profile: {
+      title: 'Profile',
+      desc: 'Maintain your basic profile and login password',
+      avatar: 'Avatar',
+      avatarHelp: 'Supports JPG, PNG, WebP, and other image formats',
+      uploadAvatar: 'Upload New Avatar',
+      nickname: 'Nickname',
+      email: 'Email',
+      mobile: 'Mobile',
+      oldPassword: 'Current Password',
+      newPassword: 'New Password',
+      saveProfile: 'Save Profile',
+      changePassword: 'Change Password',
+      nicknameRequired: 'Please enter nickname',
+      oldPasswordRequired: 'Please enter current password',
+      newPasswordRequired: 'Please enter new password',
+      passwordMin: 'At least 6 characters',
+      profileUpdated: 'Profile updated',
+      passwordUpdated: 'Password updated',
+      avatarUpdated: 'Avatar updated'
+    },
+    system: {
+      user: {
+        title: 'Users',
+        desc: 'Manage login accounts, contact info, and role assignments',
+        create: 'Create User',
+        editTitle: 'Edit User',
+        createTitle: 'Create User',
+        deleteConfirm: 'Delete this user?',
+        keyword: 'Username / nickname',
+        username: 'Username',
+        nickname: 'Nickname',
+        password: 'Initial Password',
+        email: 'Email',
+        mobile: 'Mobile',
+        roles: 'Roles',
+        usernameRequired: 'Please enter username',
+        nicknameRequired: 'Please enter nickname',
+        passwordRequired: 'Please enter password'
+      },
+      role: {
+        title: 'Roles',
+        desc: 'Configure roles, data scope, and menu permissions',
+        create: 'Create Role',
+        editTitle: 'Edit Role',
+        createTitle: 'Create Role',
+        deleteConfirm: 'Delete this role?',
+        code: 'Code',
+        roleCode: 'Role Code',
+        name: 'Name',
+        roleName: 'Role Name',
+        dataScope: 'Data Scope',
+        menuPermission: 'Menu Permissions',
+        codeRequired: 'Please enter role code',
+        nameRequired: 'Please enter role name',
+        dataScopes: {
+          all: 'All Data',
+          dept: 'Department',
+          self: 'Self'
+        }
+      },
+      menu: {
+        title: 'Menus',
+        desc: 'Manage route menus, button permissions, and sorting',
+        create: 'Create Menu',
+        editTitle: 'Edit Menu',
+        createTitle: 'Create Menu',
+        deleteConfirm: 'Delete this menu?',
+        parent: 'Parent Menu',
+        root: 'Root',
+        name: 'Name',
+        displayTitle: 'Title',
+        type: 'Type',
+        path: 'Path',
+        component: 'Component',
+        icon: 'Icon',
+        permission: 'Permission',
+        sort: 'Sort',
+        hidden: 'Hide Menu',
+        nameRequired: 'Please enter name',
+        titleRequired: 'Please enter title',
+        types: {
+          catalog: 'Catalog',
+          menu: 'Menu',
+          button: 'Button'
+        }
+      },
+      dept: {
+        title: 'Departments',
+        desc: 'Maintain organization hierarchy and department status',
+        create: 'Create Department',
+        editTitle: 'Edit Department',
+        createTitle: 'Create Department',
+        deleteConfirm: 'Delete this department?',
+        parent: 'Parent Department',
+        root: 'Root Department',
+        name: 'Department Name',
+        sort: 'Sort',
+        nameRequired: 'Please enter department name'
+      }
     }
   }
 }
 
-export default createI18n({
+const i18n = createI18n({
   legacy: false,
   locale: localStorage.getItem('locale') || 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages
 })
+
+export default i18n
