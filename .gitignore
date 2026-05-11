@@ -13,3 +13,4 @@ backend/*.log
 
 *.env
 !.env.example
+BACKEND_ARCHITECTURE_OPTIMIZATION.md
